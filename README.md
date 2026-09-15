@@ -4,7 +4,7 @@ Aplicación web para la gestión de libros y categorías de una biblioteca. El p
 
 ## Stack tecnológico
 
-- **Java 21**
+- **Java 21 X**
 - **Spring Boot 4.1.1**
 - **Spring Web MVC** para la capa web
 - **Spring Data JPA / Hibernate** para persistencia
