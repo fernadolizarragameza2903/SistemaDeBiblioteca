@@ -163,6 +163,28 @@ Las pruebas utilizan una base de datos H2 en memoria y no requieren PostgreSQL:
 2. Iniciar PostgreSQL.
 3. Crear la base de datos `sistema_biblioteca`.
 4. Configurar las credenciales en `application.properties`.
-5. Ejecutar el script SQL de estructura y datos iniciales.
-6. Levantar la aplicación con Maven Wrapper.
-7. Acceder a `http://localhost:8080`.
+6. Ejecutar el script SQL de estructura y datos iniciales.
+7. Levantar la aplicación con Maven Wrapper.
+8. Acceder a `http://localhost:8080`.
+
+Módulos del Sistema
+Módulo de Gestión de Usuarios
+Este módulo administra a los usuarios y bibliotecarios del sistema, implementando seguridad básica para el resguardo de credenciales.
+
+Características principales:
+
+Seguridad: Las contraseñas se encriptan usando BCryptPasswordEncoder antes de guardarse en la base de datos.
+
+Arquitectura: Uso estricto del patrón DTO para evitar exponer entidades y datos sensibles (como los hashes de las contraseñas) al frontend.
+
+Baja Lógica: Los usuarios no se eliminan físicamente de la base de datos, sino que cambian su estado activo a false.
+
+Endpoints disponibles (/api/usuarios):
+
+POST /api/usuarios - Crea un nuevo usuario.
+
+GET /api/usuarios - Lista todos los usuarios activos.
+
+GET /api/usuarios/{id} - Obtiene los detalles de un usuario específico.
+
+DELETE /api/usuarios/{id} - Realiza la baja lógica de un usuario.
