@@ -7,11 +7,11 @@ Aplicación web para la gestión de libros y categorías de una biblioteca. El p
 - **Java 21**
 - **Spring Boot 4.1.1**
 - **Spring Web MVC** para la capa web
-- **Spring Data JPA / Hibernate** para persistencia
-- **PostgreSQL** como base de datos relacional
-- **Thymeleaf** para las vistas del lado del servidor
 - **Maven Wrapper** para compilar y ejecutar el proyecto sin requerir una instalación global de Maven
 - **H2** para las pruebas automatizadas
+- **Thymeleaf** para las vistas del lado del servidor
+- **Spring Data JPA / Hibernate** para persistencia
+- **PostgreSQL** como base de datos relacional
 
 ## Estructura del proyecto
 
