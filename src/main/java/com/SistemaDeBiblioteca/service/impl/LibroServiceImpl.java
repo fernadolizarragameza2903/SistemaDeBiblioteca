@@ -84,7 +84,7 @@ public class LibroServiceImpl implements LibroService {
 
     private Libro buscarLibroPorId(Long id) {
         return libroRepository.findById(id)
-                .orElseThrow(() -> new LibroNoEncontradoException("No se encontro el libro con id " + id));
+            .orElseThrow(() -> new LibroNoEncontradoException("No se encontro ningun libro con el identificador " + id));
     }
 
     private void validarIsbnDisponible(String isbn, Long idActual) {
