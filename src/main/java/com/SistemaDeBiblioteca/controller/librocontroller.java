@@ -21,11 +21,11 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/libros")
-public class LibroController {
+public class librocontroller {
 
     private final LibroService libroService;
 
-    public LibroController(LibroService libroService) {
+    public librocontroller(LibroService libroService) {
         this.libroService = libroService;
     }
 

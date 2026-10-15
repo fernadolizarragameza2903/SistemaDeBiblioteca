@@ -13,8 +13,8 @@ import com.sistemadebiblioteca.exception.IsbnDuplicadoException;
 import com.sistemadebiblioteca.exception.LibroNoEncontradoException;
 import com.sistemadebiblioteca.model.Categoria;
 import com.sistemadebiblioteca.model.Libro;
-import com.sistemadebiblioteca.repository.CategoriaRepository;
-import com.sistemadebiblioteca.repository.LibroRepository;
+import com.sistemadebiblioteca.Repository.CategoriaRepository;
+import com.sistemadebiblioteca.Repository.LibroRepository;
 import com.sistemadebiblioteca.service.LibroService;
 
 @Service

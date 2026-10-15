@@ -1,4 +1,4 @@
-package com.sistemadebiblioteca.repository;
+package com.sistemadebiblioteca.Repository;
 
 import com.sistemadebiblioteca.model.Rol;
 import org.springframework.data.jpa.repository.JpaRepository;

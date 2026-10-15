@@ -1,8 +1,9 @@
 package com.sistemadebiblioteca.service;
 
-import com.SistemaDeBiblioteca.dto.UsuarioRequestDTO;
-import com.SistemaDeBiblioteca.dto.UsuarioResponseDTO;
 import java.util.List;
+
+import com.sistemadebiblioteca.dto.UsuarioRequestDTO;
+import com.sistemadebiblioteca.dto.UsuarioResponseDTO;
 
 public interface UsuarioService {
     UsuarioResponseDTO crearUsuario(UsuarioRequestDTO requestDTO);
