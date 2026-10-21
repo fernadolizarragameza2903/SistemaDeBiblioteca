@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Registrar préstamo')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('prestamos')}"></nav>
+
+<main class="container py-4">
+    <div class="page-header">
+        <h1>Registrar préstamo</h1>
+        <a class="btn btn-outline-secondary" th:href="@{/prestamos}"><i class="bi bi-arrow-left"></i> Volver</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alertas}"></div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form th:action="@{/prestamos}" th:object="${prestamo}" method="post" novalidate>
+                        <div class="mb-3">
+                            <label for="usuarioId" class="form-label">Usuario</label>
+                            <select id="usuarioId" class="form-select" th:field="*{usuarioId}"
+                                    th:classappend="${#fields.hasErrors('usuarioId')} ? 'is-invalid'">
+                                <option value="">Seleccione un usuario…</option>
+                                <option th:each="u : ${usuarios}" th:value="${u.id}"
+                                        th:text="${u.nombre + ' ' + u.apellido + ' (' + u.email + ')'}">Usuario</option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{usuarioId}"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="libroId" class="form-label">Libro</label>
+                            <select id="libroId" class="form-select" th:field="*{libroId}"
+                                    th:classappend="${#fields.hasErrors('libroId')} ? 'is-invalid'">
+                                <option value="">Seleccione un libro…</option>
+                                <option th:each="l : ${libros}" th:value="${l.id}"
+                                        th:text="${l.titulo + ' — ' + l.autor + ' (stock: ' + l.stock + ')'}">Libro</option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{libroId}"></div>
+                            <div class="form-text">Solo se muestran libros con stock disponible.</div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-4">
+                                <label for="dias" class="form-label">Días de préstamo</label>
+                                <input type="number" id="dias" class="form-control" th:field="*{dias}" min="1" max="30"
+                                       placeholder="14"
+                                       th:classappend="${#fields.hasErrors('dias')} ? 'is-invalid'">
+                                <div class="invalid-feedback" th:errors="*{dias}"></div>
+                            </div>
+                            <div class="col-sm-8">
+                                <label for="observaciones" class="form-label">Observaciones <span class="text-secondary">(opcional)</span></label>
+                                <input type="text" id="observaciones" class="form-control" th:field="*{observaciones}"
+                                       maxlength="500">
+                            </div>
+                        </div>
+                        <div class="mt-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Registrar</button>
+                            <a class="btn btn-light" th:href="@{/prestamos}">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card bg-primary-subtle">
+                <div class="card-body small">
+                    <h2 class="h6"><i class="bi bi-info-circle"></i> Reglas de préstamo</h2>
+                    <ul class="mb-0 ps-3">
+                        <li>Plazo por defecto: 14 días (máximo 30).</li>
+                        <li>Máximo 3 préstamos activos por usuario.</li>
+                        <li>No se puede prestar el mismo libro dos veces al mismo usuario.</li>
+                        <li>Al prestar se descuenta 1 del stock; al devolver se repone.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
