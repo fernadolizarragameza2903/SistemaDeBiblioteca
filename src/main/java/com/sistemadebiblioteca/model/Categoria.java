@@ -18,6 +18,9 @@ public class Categoria {
     @Column(nullable = false, unique = true, length = 255)
     private String nombre;
 
+    @Column(length = 500)
+    private String descripcion;
+
     @Column(nullable = false)
     private Boolean activo = true;
 
@@ -35,6 +38,14 @@ public class Categoria {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
     }
 
     public Boolean getActivo() {
