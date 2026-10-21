@@ -1,6 +1,6 @@
 # Sistema de Biblioteca
 
-API REST para la gestión de una biblioteca: catálogo de libros y categorías, usuarios y préstamos. Construida con Spring Boot y PostgreSQL.
+Aplicación web y API REST para la gestión de una biblioteca: catálogo de libros y categorías, usuarios y préstamos. Construida con Spring Boot, Thymeleaf + Bootstrap 5 y PostgreSQL.
 
 **Versión actual:** `v0.2.0` — ver [CHANGELOG](CHANGELOG.md) · **Guía del equipo:** [CONTRIBUTING](CONTRIBUTING.md)
 
@@ -14,7 +14,7 @@ API REST para la gestión de una biblioteca: catálogo de libros y categorías, 
 - **Bean Validation** para validar datos de entrada
 - **PostgreSQL 16** como base de datos relacional
 - **H2** para las pruebas automatizadas
-- **Thymeleaf** para las vistas del lado del servidor (próximo avance)
+- **Thymeleaf + Bootstrap 5** para las vistas web (layout con fragmentos reutilizables)
 - **Maven Wrapper** para compilar y ejecutar sin instalar Maven
 
 ## Avance del proyecto
@@ -29,7 +29,7 @@ API REST para la gestión de una biblioteca: catálogo de libros y categorías, 
 | Autenticación / login por roles | ⏳ Pendiente | — |
 | Reservas               | ⏳ Pendiente  | —                   |
 | Multas por retraso     | ⏳ Pendiente  | —                   |
-| Vistas web (Thymeleaf) | ⏳ Pendiente  | —                   |
+| Vistas web (Thymeleaf + Bootstrap) | ✅ Completado | `/`, `/libros`, `/categorias`, `/usuarios`, `/prestamos` |
 | Reportes               | ⏳ Pendiente  | —                   |
 
 ## Estructura del proyecto
@@ -45,13 +45,19 @@ SistemaDeBiblioteca/
 │   │   ├── java/com/sistemadebiblioteca/
 │   │   │   ├── SistemaDeBibliotecaApplication.java
 │   │   │   ├── config/               # CORS y seguridad
-│   │   │   ├── controller/           # Controladores REST
+│   │   │   ├── controller/           # Controladores REST (/api/**)
+│   │   │   │   └── web/              # Controladores de las vistas Thymeleaf
 │   │   │   ├── dto/                  # Objetos de transferencia de datos
 │   │   │   ├── exception/            # Excepciones y manejo global de errores
 │   │   │   ├── model/                # Entidades JPA
 │   │   │   ├── repository/           # Repositorios Spring Data
 │   │   │   └── service/              # Interfaces e implementaciones (impl/)
 │   │   └── resources/
+│   │       ├── templates/                    # Vistas Thymeleaf
+│   │       │   ├── fragments/layout.html     # Layout: head, navbar, alertas, footer
+│   │       │   ├── index.html                # Panel principal
+│   │       │   └── libros/ categorias/ usuarios/ prestamos/
+│   │       ├── static/css/app.css            # Estilos propios
 │   │       ├── application.properties        # Configuración común
 │   │       ├── application-dev.properties    # PostgreSQL local
 │   │       └── application-prod.properties   # Producción (variables de entorno)
@@ -127,7 +133,21 @@ Usuarios de prueba (contraseña `Biblioteca123`): `admin@biblioteca.com`, `maria
 ./mvnw spring-boot:run
 ```
 
-La API queda disponible en `http://localhost:8080`.
+Abre `http://localhost:8080` para usar la aplicación web. La API REST está disponible bajo `http://localhost:8080/api/...`.
+
+## Interfaz web
+
+Las vistas usan **Bootstrap 5.3** e **iconos de Bootstrap** (cargados desde CDN) sobre un layout común en `templates/fragments/layout.html`. Cada página incluye los fragmentos `head`, `navbar`, `alertas`, `footer` y `scripts`, por lo que el diseño se cambia en un solo lugar.
+
+| Ruta                          | Pantalla                                                        |
+|-------------------------------|-----------------------------------------------------------------|
+| `/`                           | Panel con totales de libros, categorías, usuarios y vencidos    |
+| `/libros`                     | Listado con búsqueda por título, autor o ISBN; alta, edición y baja |
+| `/categorias`                 | Tarjetas de categorías, detalle con sus libros, alta, edición y baja |
+| `/usuarios`                   | Listado por rol, registro de usuarios, baja e historial de préstamos |
+| `/prestamos`                  | Préstamos activos y vencidos, registro y devolución             |
+
+Los formularios validan los datos en el servidor y muestran los errores debajo de cada campo; las reglas de negocio (sin stock, límite de préstamos, ISBN o email duplicado) se muestran como alertas.
 
 ## Ejecutar las pruebas
 
