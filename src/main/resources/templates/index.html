@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Inicio')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('inicio')}"></nav>
+
+<main class="container py-4">
+    <div class="page-header">
+        <h1><i class="bi bi-speedometer2 me-1"></i> Panel principal</h1>
+        <a class="btn btn-primary" th:href="@{/prestamos/nuevo}">
+            <i class="bi bi-plus-lg"></i> Registrar préstamo
+        </a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alertas}"></div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <a class="card stat-card h-100 text-decoration-none" th:href="@{/libros}">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <span class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-journal-bookmark"></i></span>
+                    <div>
+                        <div class="stat-value text-body" th:text="${totalLibros}">0</div>
+                        <div class="small text-secondary">Libros activos</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <a class="card stat-card h-100 text-decoration-none" th:href="@{/categorias}">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <span class="stat-icon bg-info-subtle text-info"><i class="bi bi-tags"></i></span>
+                    <div>
+                        <div class="stat-value text-body" th:text="${totalCategorias}">0</div>
+                        <div class="small text-secondary">Categorías</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <a class="card stat-card h-100 text-decoration-none" th:href="@{/usuarios}">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <span class="stat-icon bg-success-subtle text-success"><i class="bi bi-people"></i></span>
+                    <div>
+                        <div class="stat-value text-body" th:text="${totalUsuarios}">0</div>
+                        <div class="small text-secondary">Usuarios activos</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <a class="card stat-card h-100 text-decoration-none" th:href="@{/prestamos/vencidos}">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <span class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-alarm"></i></span>
+                    <div>
+                        <div class="stat-value text-body" th:text="${totalVencidos}">0</div>
+                        <div class="small text-secondary">Préstamos vencidos</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">Préstamos activos</span>
+            <a class="small" th:href="@{/prestamos}">Ver todos</a>
+        </div>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(prestamosActivos)}">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Libro</th>
+                    <th>Usuario</th>
+                    <th>Devolver hasta</th>
+                    <th>Estado</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${prestamosActivos}">
+                    <td th:text="${p.tituloLibro}">Titulo</td>
+                    <td th:text="${p.nombreUsuario}">Usuario</td>
+                    <td th:text="${#temporals.format(p.fechaDevolucionEsperada, 'dd/MM/yyyy')}">01/01/2026</td>
+                    <td>
+                        <span th:if="${p.vencido}" class="badge text-bg-danger">Vencido</span>
+                        <span th:unless="${p.vencido}" class="badge text-bg-success">A tiempo</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(prestamosActivos)}">
+            <i class="bi bi-inbox"></i> No hay préstamos activos
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
