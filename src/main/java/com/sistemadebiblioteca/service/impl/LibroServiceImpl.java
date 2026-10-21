@@ -109,6 +109,7 @@ public class LibroServiceImpl implements LibroService {
         response.setTitulo(libro.getTitulo());
         response.setAutor(libro.getAutor());
         response.setIsbn(libro.getIsbn());
+        response.setCategoriaId(libro.getCategoria() != null ? libro.getCategoria().getId() : null);
         response.setNombreCategoria(libro.getCategoria() != null ? libro.getCategoria().getNombre() : null);
         response.setStock(libro.getStock());
         response.setActivo(libro.getActivo());

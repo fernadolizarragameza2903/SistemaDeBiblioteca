@@ -8,6 +8,7 @@ public class LibroResponseDTO {
     private String titulo;
     private String autor;
     private String isbn;
+    private Long categoriaId;
     private String nombreCategoria;
     private Integer stock;
     private Boolean activo;
@@ -43,6 +44,14 @@ public class LibroResponseDTO {
 
     public void setIsbn(String isbn) {
         this.isbn = isbn;
+    }
+
+    public Long getCategoriaId() {
+        return categoriaId;
+    }
+
+    public void setCategoriaId(Long categoriaId) {
+        this.categoriaId = categoriaId;
     }
 
     public String getNombreCategoria() {
