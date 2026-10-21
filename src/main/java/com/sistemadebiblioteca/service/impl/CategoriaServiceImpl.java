@@ -95,6 +95,7 @@ public class CategoriaServiceImpl implements CategoriaService {
                     dto.setTitulo(libro.getTitulo());
                     dto.setAutor(libro.getAutor());
                     dto.setIsbn(libro.getIsbn());
+                    dto.setCategoriaId(categoria.getId());
                     dto.setNombreCategoria(categoria.getNombre());
                     dto.setStock(libro.getStock());
                     dto.setActivo(libro.getActivo());

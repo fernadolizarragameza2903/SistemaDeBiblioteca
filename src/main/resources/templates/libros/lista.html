@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Libros')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('libros')}"></nav>
+
+<main class="container py-4">
+    <div class="page-header">
+        <h1><i class="bi bi-journal-bookmark me-1"></i> Libros</h1>
+        <a class="btn btn-primary" th:href="@{/libros/nuevo}"><i class="bi bi-plus-lg"></i> Nuevo libro</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alertas}"></div>
+
+    <div class="card">
+        <div class="card-body border-bottom">
+            <form class="row g-2" th:action="@{/libros}" method="get">
+                <div class="col-sm-8 col-md-6">
+                    <input type="search" class="form-control" name="q" th:value="${q}"
+                           placeholder="Buscar por título, autor o ISBN">
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-outline-primary" type="submit"><i class="bi bi-search"></i> Buscar</button>
+                    <a class="btn btn-link" th:if="${q}" th:href="@{/libros}">Limpiar</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive" th:unless="${#lists.isEmpty(libros)}">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Autor</th>
+                    <th>ISBN</th>
+                    <th>Categoría</th>
+                    <th class="text-center">Stock</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="libro : ${libros}">
+                    <td class="fw-semibold" th:text="${libro.titulo}">Titulo</td>
+                    <td th:text="${libro.autor}">Autor</td>
+                    <td class="font-monospace small" th:text="${libro.isbn}">ISBN</td>
+                    <td>
+                        <span th:if="${libro.nombreCategoria}" class="badge text-bg-light border"
+                              th:text="${libro.nombreCategoria}">Categoria</span>
+                        <span th:unless="${libro.nombreCategoria}" class="text-secondary small">Sin categoría</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge" th:classappend="${libro.stock > 0} ? 'text-bg-success' : 'text-bg-secondary'"
+                              th:text="${libro.stock}">0</span>
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/libros/{id}/editar(id=${libro.id})}"
+                           title="Editar"><i class="bi bi-pencil"></i></a>
+                        <form class="d-inline" th:action="@{/libros/{id}/baja(id=${libro.id})}" method="post"
+                              onsubmit="return confirm('¿Dar de baja este libro?');">
+                            <button class="btn btn-sm btn-outline-danger" type="submit" title="Dar de baja">
+                                <i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(libros)}">
+            <i class="bi bi-journal-x"></i> No se encontraron libros
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
