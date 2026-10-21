@@ -3,6 +3,17 @@
 Todos los cambios relevantes del proyecto se registran aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y [Versionado Semántico](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Agregado
+- Interfaz web con Thymeleaf y Bootstrap 5: layout común con fragmentos (head, navbar, alertas, footer).
+- Panel principal con indicadores y préstamos activos.
+- Pantallas de libros (búsqueda, alta, edición, baja), categorías (tarjetas, detalle, alta, edición, baja), usuarios (listado, registro, baja) y préstamos (activos, vencidos, historial por usuario, registro y devolución).
+- Prueba web que verifica que todas las vistas renderizan.
+
+### Cambiado
+- La respuesta de libros incluye `categoriaId`.
+
 ## [0.2.0] - 2026-10-21
 
 Segundo avance: el sistema cubre el núcleo de la biblioteca (catálogo, usuarios y préstamos) sobre PostgreSQL.
