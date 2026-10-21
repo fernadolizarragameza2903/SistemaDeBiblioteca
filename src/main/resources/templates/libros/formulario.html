@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${libroId} ? 'Editar libro' : 'Nuevo libro')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('libros')}"></nav>
+
+<main class="container py-4">
+    <div class="page-header">
+        <h1 th:text="${libroId} ? 'Editar libro' : 'Nuevo libro'">Nuevo libro</h1>
+        <a class="btn btn-outline-secondary" th:href="@{/libros}"><i class="bi bi-arrow-left"></i> Volver</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alertas}"></div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="${libroId} ? @{/libros/{id}(id=${libroId})} : @{/libros}" th:object="${libro}"
+                  method="post" novalidate>
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label for="titulo" class="form-label">Título</label>
+                        <input type="text" id="titulo" class="form-control" th:field="*{titulo}"
+                               th:classappend="${#fields.hasErrors('titulo')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{titulo}"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="isbn" class="form-label">ISBN</label>
+                        <input type="text" id="isbn" class="form-control" th:field="*{isbn}" maxlength="20"
+                               th:classappend="${#fields.hasErrors('isbn')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{isbn}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="autor" class="form-label">Autor</label>
+                        <input type="text" id="autor" class="form-control" th:field="*{autor}"
+                               th:classappend="${#fields.hasErrors('autor')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{autor}"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="categoriaId" class="form-label">Categoría</label>
+                        <select id="categoriaId" class="form-select" th:field="*{categoriaId}">
+                            <option value="">Sin categoría</option>
+                            <option th:each="c : ${categorias}" th:value="${c.id}" th:text="${c.nombre}">Categoria</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="stock" class="form-label">Stock</label>
+                        <input type="number" id="stock" class="form-control" th:field="*{stock}" min="0"
+                               th:classappend="${#fields.hasErrors('stock')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{stock}"></div>
+                    </div>
+                </div>
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar</button>
+                    <a class="btn btn-light" th:href="@{/libros}">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
