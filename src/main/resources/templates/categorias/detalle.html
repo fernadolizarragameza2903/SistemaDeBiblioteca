@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${categoria.nombre})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('categorias')}"></nav>
+
+<main class="container py-4">
+    <div class="page-header">
+        <div>
+            <h1 th:text="${categoria.nombre}">Categoria</h1>
+            <p class="text-secondary mb-0" th:text="${categoria.descripcion}">Descripcion</p>
+        </div>
+        <a class="btn btn-outline-secondary" th:href="@{/categorias}"><i class="bi bi-arrow-left"></i> Volver</a>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white fw-semibold">
+            Libros de la categoría <span class="badge text-bg-primary" th:text="${#lists.size(libros)}">0</span>
+        </div>
+        <div class="table-responsive" th:unless="${#lists.isEmpty(libros)}">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Autor</th>
+                    <th>ISBN</th>
+                    <th class="text-center">Stock</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="libro : ${libros}">
+                    <td class="fw-semibold" th:text="${libro.titulo}">Titulo</td>
+                    <td th:text="${libro.autor}">Autor</td>
+                    <td class="font-monospace small" th:text="${libro.isbn}">ISBN</td>
+                    <td class="text-center" th:text="${libro.stock}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(libros)}">
+            <i class="bi bi-journal-x"></i> Esta categoría aún no tiene libros
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
