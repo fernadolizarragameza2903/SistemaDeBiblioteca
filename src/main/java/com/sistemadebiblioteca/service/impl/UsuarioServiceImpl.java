@@ -1,40 +1,45 @@
 package com.sistemadebiblioteca.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.List;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sistemadebiblioteca.dto.UsuarioRequestDTO;
 import com.sistemadebiblioteca.dto.UsuarioResponseDTO;
+import com.sistemadebiblioteca.exception.RecursoDuplicadoException;
+import com.sistemadebiblioteca.exception.RecursoNoEncontradoException;
 import com.sistemadebiblioteca.model.Rol;
 import com.sistemadebiblioteca.model.Usuario;
 import com.sistemadebiblioteca.repository.RolRepository;
 import com.sistemadebiblioteca.repository.UsuarioRepository;
 import com.sistemadebiblioteca.service.UsuarioService;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
+@Transactional
 public class UsuarioServiceImpl implements UsuarioService {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final RolRepository rolRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    @Autowired
-    private RolRepository rolRepository; // Asume que este repositorio existe
-
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    public UsuarioServiceImpl(UsuarioRepository usuarioRepository, RolRepository rolRepository,
+            BCryptPasswordEncoder passwordEncoder) {
+        this.usuarioRepository = usuarioRepository;
+        this.rolRepository = rolRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public UsuarioResponseDTO crearUsuario(UsuarioRequestDTO requestDTO) {
         if (usuarioRepository.findByEmail(requestDTO.getEmail()).isPresent()) {
-            throw new RuntimeException("El email ya está registrado");
+            throw new RecursoDuplicadoException("El email " + requestDTO.getEmail() + " ya esta registrado");
         }
 
         Rol rol = rolRepository.findById(requestDTO.getRolId())
-                .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "No se encontro el rol con id " + requestDTO.getRolId()));
 
         Usuario usuario = new Usuario();
         usuario.setNombre(requestDTO.getNombre());
@@ -45,31 +50,34 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setRol(rol);
         usuario.setActivo(true);
 
-        Usuario guardado = usuarioRepository.save(usuario);
-        return mapearAResponse(guardado);
+        return mapearAResponse(usuarioRepository.save(usuario));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UsuarioResponseDTO obtenerUsuarioPorId(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        return mapearAResponse(usuario);
+        return mapearAResponse(buscarUsuarioPorId(id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UsuarioResponseDTO> listarUsuariosActivos() {
-        return usuarioRepository.findAll().stream()
-                .filter(Usuario::getActivo)
+        return usuarioRepository.findByActivoTrue()
+                .stream()
                 .map(this::mapearAResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public void eliminarUsuario(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Usuario usuario = buscarUsuarioPorId(id);
         usuario.setActivo(false);
         usuarioRepository.save(usuario);
+    }
+
+    private Usuario buscarUsuarioPorId(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontro el usuario con id " + id));
     }
 
     private UsuarioResponseDTO mapearAResponse(Usuario usuario) {

@@ -28,6 +28,21 @@ public class GlobalExceptionHandler {
         return crearRespuesta(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 
+    @ExceptionHandler(RecursoNoEncontradoException.class)
+    public ResponseEntity<Map<String, String>> manejarRecursoNoEncontrado(RecursoNoEncontradoException exception) {
+        return crearRespuesta(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(RecursoDuplicadoException.class)
+    public ResponseEntity<Map<String, String>> manejarRecursoDuplicado(RecursoDuplicadoException exception) {
+        return crearRespuesta(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    @ExceptionHandler(OperacionNoPermitidaException.class)
+    public ResponseEntity<Map<String, String>> manejarOperacionNoPermitida(OperacionNoPermitidaException exception) {
+        return crearRespuesta(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> manejarValidaciones(MethodArgumentNotValidException exception) {
         Map<String, String> errores = new HashMap<>();
