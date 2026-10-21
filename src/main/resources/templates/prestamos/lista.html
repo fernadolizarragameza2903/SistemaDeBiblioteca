@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${titulo})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('prestamos')}"></nav>
+
+<main class="container py-4">
+    <div class="page-header">
+        <h1><i class="bi bi-arrow-left-right me-1"></i> <span th:text="${titulo}">Préstamos</span></h1>
+        <a class="btn btn-primary" th:href="@{/prestamos/nuevo}"><i class="bi bi-plus-lg"></i> Registrar préstamo</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alertas}"></div>
+
+    <ul class="nav nav-pills mb-3" th:if="${vista != 'historial'}">
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${vista == 'activos'} ? 'active'" th:href="@{/prestamos}">Activos</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${vista == 'vencidos'} ? 'active'" th:href="@{/prestamos/vencidos}">Vencidos</a>
+        </li>
+    </ul>
+    <a class="btn btn-sm btn-outline-secondary mb-3" th:if="${vista == 'historial'}" th:href="@{/usuarios}">
+        <i class="bi bi-arrow-left"></i> Volver a usuarios</a>
+
+    <div class="card">
+        <div class="table-responsive" th:unless="${#lists.isEmpty(prestamos)}">
+            <table class="table table-hover mb-0">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Libro</th>
+                    <th>Usuario</th>
+                    <th>Prestado</th>
+                    <th>Devolver hasta</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acción</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${prestamos}">
+                    <td class="text-secondary" th:text="${p.id}">1</td>
+                    <td class="fw-semibold" th:text="${p.tituloLibro}">Titulo</td>
+                    <td th:text="${p.nombreUsuario}">Usuario</td>
+                    <td th:text="${#temporals.format(p.fechaPrestamo, 'dd/MM/yyyy')}">01/01/2026</td>
+                    <td th:text="${#temporals.format(p.fechaDevolucionEsperada, 'dd/MM/yyyy')}">15/01/2026</td>
+                    <td>
+                        <span th:if="${p.estado == 'DEVUELTO'}" class="badge text-bg-secondary"
+                              th:title="${'Devuelto el ' + #temporals.format(p.fechaDevolucionReal, 'dd/MM/yyyy')}">Devuelto</span>
+                        <span th:if="${p.estado == 'ACTIVO' and p.vencido}" class="badge text-bg-danger">Vencido</span>
+                        <span th:if="${p.estado == 'ACTIVO' and !p.vencido}" class="badge text-bg-success">Activo</span>
+                    </td>
+                    <td class="text-end">
+                        <form th:if="${p.estado == 'ACTIVO'}" th:action="@{/prestamos/{id}/devolucion(id=${p.id})}"
+                              method="post" onsubmit="return confirm('¿Registrar la devolución de este libro?');">
+                            <button class="btn btn-sm btn-outline-success" type="submit">
+                                <i class="bi bi-box-arrow-in-left"></i> Devolver</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="empty-state" th:if="${#lists.isEmpty(prestamos)}">
+            <i class="bi bi-inbox"></i> No hay préstamos para mostrar
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
