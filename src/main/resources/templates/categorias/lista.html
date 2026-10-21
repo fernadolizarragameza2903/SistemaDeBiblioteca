@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Categorías')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('categorias')}"></nav>
+
+<main class="container py-4">
+    <div class="page-header">
+        <h1><i class="bi bi-tags me-1"></i> Categorías</h1>
+        <a class="btn btn-primary" th:href="@{/categorias/nueva}"><i class="bi bi-plus-lg"></i> Nueva categoría</a>
+    </div>
+
+    <div th:replace="~{fragments/layout :: alertas}"></div>
+
+    <div class="row g-3" th:unless="${#lists.isEmpty(categorias)}">
+        <div class="col-sm-6 col-lg-4" th:each="c : ${categorias}">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h5 card-title">
+                        <a class="text-decoration-none" th:href="@{/categorias/{id}(id=${c.id})}" th:text="${c.nombre}">Nombre</a>
+                    </h2>
+                    <p class="card-text text-secondary small"
+                       th:text="${c.descripcion} ?: 'Sin descripción'">Descripcion</p>
+                </div>
+                <div class="card-footer bg-white border-0 d-flex gap-2 justify-content-end">
+                    <a class="btn btn-sm btn-outline-primary" th:href="@{/categorias/{id}(id=${c.id})}">
+                        <i class="bi bi-eye"></i> Ver libros</a>
+                    <a class="btn btn-sm btn-outline-secondary" th:href="@{/categorias/{id}/editar(id=${c.id})}"
+                       title="Editar"><i class="bi bi-pencil"></i></a>
+                    <form th:action="@{/categorias/{id}/baja(id=${c.id})}" method="post"
+                          onsubmit="return confirm('¿Dar de baja esta categoría?');">
+                        <button class="btn btn-sm btn-outline-danger" type="submit" title="Dar de baja">
+                            <i class="bi bi-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card" th:if="${#lists.isEmpty(categorias)}">
+        <div class="empty-state"><i class="bi bi-tags"></i> No hay categorías registradas</div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
