@@ -8,8 +8,8 @@ import com.sistemadebiblioteca.dto.UsuarioRequestDTO;
 import com.sistemadebiblioteca.dto.UsuarioResponseDTO;
 import com.sistemadebiblioteca.model.Rol;
 import com.sistemadebiblioteca.model.Usuario;
-import com.sistemadebiblioteca.Repository.RolRepository;
-import com.sistemadebiblioteca.Repository.UsuarioRepository;
+import com.sistemadebiblioteca.repository.RolRepository;
+import com.sistemadebiblioteca.repository.UsuarioRepository;
 import com.sistemadebiblioteca.service.UsuarioService;
 
 import java.util.List;

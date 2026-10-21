@@ -1,4 +1,4 @@
-package com.sistemadebiblioteca.Repository;
+package com.sistemadebiblioteca.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

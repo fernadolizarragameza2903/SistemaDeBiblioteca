@@ -1,4 +1,4 @@
-package com.SistemaDeBiblioteca;
+package com.sistemadebiblioteca;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
