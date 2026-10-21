@@ -1,4 +1,4 @@
-package com.sistemadebiblioteca.Repository;
+package com.sistemadebiblioteca.repository;
 
 import java.util.List;
 import java.util.Optional;
