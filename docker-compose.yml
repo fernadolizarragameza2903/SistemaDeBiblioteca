@@ -1,0 +1,19 @@
+# Alternativa para quien no tenga PostgreSQL instalado:
+#   docker compose up -d
+# Crea la base sistema_biblioteca y ejecuta los scripts de database/ automaticamente.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: biblioteca-postgres
+    environment:
+      POSTGRES_DB: sistema_biblioteca
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d:ro
+      - biblioteca-data:/var/lib/postgresql/data
+
+volumes:
+  biblioteca-data:
