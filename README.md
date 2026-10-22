@@ -21,16 +21,16 @@ Aplicación web y API REST para la gestión de una biblioteca: catálogo de libr
 
 | Módulo                 | Estado        | Endpoints base      |
 |------------------------|---------------|---------------------|
-| Libros                 | ✅ Completado | `/api/libros`       |
-| Usuarios               | ✅ Completado | `/api/usuarios`     |
-| Categorías             | ✅ Completado | `/api/categorias`   |
-| Préstamos y devoluciones | ✅ Completado | `/api/prestamos`  |
-| Base de datos (scripts)| ✅ Completado | `database/`         |
-| Autenticación / login por roles | ⏳ Pendiente | — |
-| Reservas               | ⏳ Pendiente  | —                   |
-| Multas por retraso     | ⏳ Pendiente  | —                   |
-| Vistas web (Thymeleaf + Bootstrap) | ✅ Completado | `/`, `/libros`, `/categorias`, `/usuarios`, `/prestamos` |
-| Reportes               | ⏳ Pendiente  | —                   |
+| Libros                 | Completado    | `/api/libros`       |
+| Usuarios               | Completado    | `/api/usuarios`     |
+| Categorías             | Completado    | `/api/categorias`   |
+| Préstamos y devoluciones | Completado    | `/api/prestamos`  |
+| Base de datos (scripts)| Completado    | `database/`         |
+| Autenticación / login por roles | Pendiente | — |
+| Reservas               | Pendiente     | —                   |
+| Multas por retraso     | Pendiente     | —                   |
+| Vistas web (Thymeleaf + Bootstrap) | Completado    | `/`, `/libros`, `/categorias`, `/usuarios`, `/prestamos` |
+| Reportes               | Pendiente     | —                   |
 
 ## Estructura del proyecto
 
