@@ -30,7 +30,7 @@ Aplicación web y API REST para la gestión de una biblioteca: catálogo de libr
 | Reservas               | ⏳ Pendiente  | —                   |
 | Multas por retraso     | ⏳ Pendiente  | —                   |
 | Vistas web (Thymeleaf + Bootstrap) | ✅ Completado | `/`, `/libros`, `/categorias`, `/usuarios`, `/prestamos` |
-| Reportes               | ⏳ Pendiente  | —                   |
+| Reportes               | ✅ Completado | `/api/reportes/resumen` |
 
 ## Estructura del proyecto
 
