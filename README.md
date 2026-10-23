@@ -32,6 +32,7 @@ Aplicación web y API REST para la gestión de una biblioteca: catálogo de libr
 | Vistas web (Thymeleaf + Bootstrap) | Completado    | `/`, `/libros`, `/categorias`, `/usuarios`, `/prestamos` |
 | Reportes               | Pendiente     | —                   |
 
+
 ## Estructura del proyecto
 
 ```text
