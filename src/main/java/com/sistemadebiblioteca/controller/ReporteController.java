@@ -1,4 +1,3 @@
-/*
 package com.sistemadebiblioteca.controller;
 
 import java.time.LocalDate;
@@ -49,4 +48,3 @@ public class ReporteController {
         return ResponseEntity.ok(resumen);
     }
 }
-*/
