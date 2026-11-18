@@ -2,7 +2,7 @@
 
 Aplicación web y API REST para la gestión de una biblioteca: catálogo de libros y categorías, usuarios y préstamos. Construida con Spring Boot, Thymeleaf + Bootstrap 5 y PostgreSQL.
 
-**Versión actual:** `v0.2.0` — ver [CHANGELOG](CHANGELOG.md) · **Guía del equipo:** [CONTRIBUTING](CONTRIBUTING.md)
+**Versión actual:** `v0.4.0` — ver [CHANGELOG](CHANGELOG.md) · **Guía del equipo:** [CONTRIBUTING](CONTRIBUTING.md)
 
 ## Stack tecnológico
 
