@@ -2,7 +2,9 @@
 # Entrega / Despliegue Continuo (CD)
 # Se dispara SOLO cuando el workflow CI termina con exito sobre main
 # (es decir, despues de mergear un Pull Request aprobado).
-# Etapas: 1) Publicar imagen en GHCR -> 2) Desplegar en Render -> 3) Verificar
+# Etapas: 1) Publicar imagen en GHCR -> 2) Verificar la imagen publicada
+#         (queda LISTA PARA DESPLIEGUE) -> 3) Desplegar en Render (opcional,
+#         solo si la variable RENDER_ENABLED=true esta configurada)
 # =====================================================================
 name: CD
 
@@ -31,6 +33,7 @@ jobs:
       packages: write
     outputs:
       sha: ${{ steps.meta.outputs.sha }}
+      image: ${{ steps.meta.outputs.image }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -59,11 +62,84 @@ jobs:
             ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.sha }}
 
   # ---------------------------------------------------------------
-  # Etapas 2 y 3: despliegue en Render y verificacion post-despliegue
+  # Etapa 2: descarga la imagen publicada y la ejecuta con PostgreSQL.
+  # Si pasa, la version queda lista para desplegarse en cualquier nube.
+  # ---------------------------------------------------------------
+  verificar-imagen:
+    name: 2. Verificar imagen publicada (listo para despliegue)
+    needs: publicar-imagen
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+    env:
+      IMAGE: ${{ needs.publicar-imagen.outputs.image }}:${{ needs.publicar-imagen.outputs.sha }}
+      POSTGRES_PASSWORD: cd-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.publicar-imagen.outputs.sha }}
+
+      - name: Login en GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Descargar la imagen publicada (no se recompila)
+        run: |
+          docker pull "$IMAGE"
+          docker tag "$IMAGE" sistema-biblioteca:local
+
+      - name: Ejecutar la imagen con PostgreSQL
+        run: docker compose up -d --no-build
+
+      - name: Comprobar salud de la aplicacion
+        run: |
+          for i in $(seq 1 40); do
+            if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+              echo "Imagen $IMAGE funcionando (intento $i)"; exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::La imagen publicada no respondio UP en /actuator/health"
+          exit 1
+
+      - name: Logs de los contenedores (solo si algo fallo)
+        if: failure()
+        run: docker compose logs --no-color
+
+      - name: Resumen de la entrega
+        run: |
+          {
+            echo "## Version lista para despliegue"
+            echo "- Imagen: \`$IMAGE\`"
+            echo "- Tambien publicada como \`latest\`"
+            echo "- Probada: /actuator/health = UP con PostgreSQL 16"
+            echo ""
+            echo "Ejecutarla en cualquier servidor con Docker:"
+            echo '```bash'
+            echo "docker pull $IMAGE"
+            echo "docker run -p 8080:8080 -e DB_URL=... -e DB_USERNAME=... -e DB_PASSWORD=... $IMAGE"
+            echo '```'
+            if [ "${{ vars.RENDER_ENABLED }}" != "true" ]; then
+              echo "Despliegue en Render: omitido (RENDER_ENABLED no esta activo). La plataforma esta definida en render.yaml."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Apagar contenedores
+        if: always()
+        run: docker compose down -v
+
+  # ---------------------------------------------------------------
+  # Etapa 3 (opcional): despliegue en Render y verificacion por commit
   # ---------------------------------------------------------------
   desplegar:
-    name: 2. Desplegar en Render
-    needs: publicar-imagen
+    name: 3. Desplegar en Render (opcional)
+    needs: [publicar-imagen, verificar-imagen]
+    if: vars.RENDER_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
@@ -81,7 +157,7 @@ jobs:
           curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL" -o /dev/null
           echo "Despliegue solicitado para el commit ${{ needs.publicar-imagen.outputs.sha }}"
 
-      - name: 3. Verificar que el nuevo commit esta en produccion
+      - name: Verificar que el nuevo commit esta en produccion
         env:
           APP_URL: ${{ vars.APP_URL }}
           SHA: ${{ needs.publicar-imagen.outputs.sha }}

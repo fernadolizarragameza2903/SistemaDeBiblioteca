@@ -254,18 +254,24 @@ docker compose down           # agregar -v para borrar los datos
 
 ```text
 Issue → rama → commits → Pull Request → CI (secretos → build/pruebas → Docker + smoke test)
-      → review + merge a main → CD (imagen en GHCR → deploy en Render → verificación del commit)
+      → review + merge a main → CD (imagen en GHCR → verificación de la imagen → listo para despliegue)
 ```
 
 | Workflow | Trigger | Qué hace |
 |----------|---------|----------|
 | [`ci.yml`](.github/workflows/ci.yml) | push a cualquier rama, PR a `main` | 1) Gitleaks busca secretos · 2) compila, prueba (H2) y empaqueta, publica reportes y JAR · 3) construye la imagen, la levanta con PostgreSQL y prueba `/actuator/health`, `/api/libros`, `/api/categorias` y `/`. Si algo falla, muestra los logs de los contenedores y bloquea el PR. |
-| [`cd.yml`](.github/workflows/cd.yml) | CI exitoso sobre `main` | 1) Publica la imagen en `ghcr.io` (tags `latest` y SHA) · 2) llama al Deploy Hook de Render (secreto) · 3) espera hasta que `/actuator/info` muestre el commit desplegado y la salud esté `UP`. Usa el environment `production`. |
+| [`cd.yml`](.github/workflows/cd.yml) | CI exitoso sobre `main` | 1) Publica la imagen en `ghcr.io` (tags `latest` y SHA) · 2) descarga esa imagen, la ejecuta con PostgreSQL y comprueba `/actuator/health` → la versión queda **lista para despliegue** · 3) *(opcional, si `RENDER_ENABLED=true`)* llama al Deploy Hook de Render y verifica en `/actuator/info` el commit desplegado. |
 | [`release.yml`](.github/workflows/release.yml) | tag `vX.Y.Z` | Compila, prueba y crea el GitHub Release con el JAR adjunto. |
 
-## Despliegue en la nube (Render)
+## Despliegue en la nube (listo para desplegar)
 
-`render.yaml` define la infraestructura (Blueprint): un web service Docker y una base PostgreSQL, ambos del plan gratuito. Las credenciales de la BD las genera Render y llegan como variables de entorno.
+Cada versión de `main` queda publicada y probada como imagen en **GitHub Container Registry**:
+
+```bash
+docker pull ghcr.io/fernadolizarragameza2903/sistemadebiblioteca:latest
+```
+
+`render.yaml` deja definida la plataforma (Blueprint de Render): un web service Docker y una base PostgreSQL, ambos del plan gratuito. Las credenciales de la BD las genera Render y llegan como variables de entorno. Para activar el despliegue automático:
 
 1. Render → **New → Blueprint** → elegir este repositorio → **Apply**.
 2. Crear el esquema una sola vez con la *External Database URL* de Render:
@@ -275,7 +281,7 @@ Issue → rama → commits → Pull Request → CI (secretos → build/pruebas �
    ```
 3. En el servicio: **Settings → Deploy Hook** → copiar la URL. En `CORS_ALLOWED_ORIGINS` poner la URL pública.
 4. En GitHub → **Settings → Environments → production**: secreto `RENDER_DEPLOY_HOOK_URL` y variable `APP_URL` (URL pública, sin `/` final).
-5. Cada merge a `main` con CI en verde se despliega automáticamente.
+5. Crear la variable `RENDER_ENABLED=true` en el environment `production`. Desde ese momento cada merge a `main` con CI en verde se despliega automáticamente.
 
 ## Seguridad y configuración
 
