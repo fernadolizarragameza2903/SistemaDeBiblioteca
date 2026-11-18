@@ -1,0 +1,136 @@
+# =====================================================================
+# Integracion Continua (CI)
+# Se ejecuta en cada push y en cada Pull Request hacia main.
+# Etapas: 1) Seguridad (secretos) -> 2) Build + pruebas -> 3) Docker + smoke test
+# Si una etapa falla, las siguientes no se ejecutan y el PR queda bloqueado.
+# =====================================================================
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    paths-ignore: ["**.md", "docs/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Si llega un push nuevo a la misma rama, se cancela la ejecucion anterior
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------
+  # Etapa 1: busca contrasenas, tokens o llaves subidas por error
+  # ---------------------------------------------------------------
+  secretos:
+    name: 1. Escaneo de secretos
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Gitleaks (detecta secretos en el codigo e historial)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------------------------------------------------------------
+  # Etapa 2: compila, ejecuta pruebas y empaqueta el JAR
+  # ---------------------------------------------------------------
+  build-test:
+    name: 2. Build y pruebas
+    runs-on: ubuntu-latest
+    needs: secretos
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configurar Java 21 (con cache de Maven)
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Compilar
+        run: ./mvnw -B -ntp compile
+
+      - name: Ejecutar pruebas (H2 en memoria)
+        run: ./mvnw -B -ntp test
+
+      - name: Empaquetar JAR
+        run: ./mvnw -B -ntp package -DskipTests
+
+      - name: Resumen de pruebas
+        if: always()
+        run: |
+          echo "## Resultado de pruebas" >> "$GITHUB_STEP_SUMMARY"
+          if ls target/surefire-reports/*.txt >/dev/null 2>&1; then
+            for f in target/surefire-reports/*.txt; do
+              sed -n 4p "$f" | sed "s|^|- $(basename "$f" .txt): |" >> "$GITHUB_STEP_SUMMARY"
+            done
+          else
+            echo "- No se generaron reportes: el build fallo antes de las pruebas" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Publicar reportes de pruebas (tambien si fallan)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-pruebas
+          path: target/surefire-reports/
+          retention-days: 14
+
+      - name: Publicar JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: sistema-biblioteca-jar
+          path: target/*.jar
+          retention-days: 7
+
+  # ---------------------------------------------------------------
+  # Etapa 3: construye la imagen Docker y la prueba con PostgreSQL real
+  # ---------------------------------------------------------------
+  docker:
+    name: 3. Imagen Docker y smoke test
+    runs-on: ubuntu-latest
+    needs: build-test
+    timeout-minutes: 15
+    env:
+      # Credencial efimera solo para el contenedor de prueba del pipeline
+      POSTGRES_PASSWORD: ci-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Construir y levantar app + PostgreSQL
+        run: docker compose up -d --build
+
+      - name: Esperar a que la aplicacion este saludable
+        run: |
+          for i in $(seq 1 40); do
+            if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+              echo "Aplicacion UP en el intento $i"; exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::La aplicacion no respondio UP en /actuator/health"
+          exit 1
+
+      - name: Smoke test de endpoints
+        run: |
+          curl -fsS http://localhost:8080/api/libros > /dev/null && echo "OK /api/libros"
+          curl -fsS http://localhost:8080/api/categorias > /dev/null && echo "OK /api/categorias"
+          curl -fsS http://localhost:8080/ > /dev/null && echo "OK / (panel web)"
+
+      - name: Logs de los contenedores (solo si algo fallo)
+        if: failure()
+        run: docker compose logs --no-color
+
+      - name: Apagar contenedores
+        if: always()
+        run: docker compose down -v

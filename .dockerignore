@@ -1,0 +1,14 @@
+# Archivos que NO entran al contexto de la imagen Docker
+target/
+.git/
+.github/
+.idea/
+.vscode/
+*.iml
+.env
+.env.*
+!.env.example
+docs/
+*.md
+docker-compose*.yml
+render.yaml
