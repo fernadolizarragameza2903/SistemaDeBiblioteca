@@ -1,0 +1,49 @@
+# =====================================================================
+# Render Blueprint (infraestructura como codigo)
+# Crea: 1 web service Docker + 1 base de datos PostgreSQL (plan gratuito).
+# Render -> New -> Blueprint -> seleccionar este repositorio.
+# Las credenciales de la BD las genera Render y se inyectan como variables
+# de entorno: nunca estan escritas en el repositorio.
+# =====================================================================
+services:
+  - type: web
+    name: sistema-biblioteca
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health
+    # El despliegue lo dispara el pipeline de CD (Deploy Hook) solo si CI pasa
+    autoDeploy: false
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DB_HOST
+        fromDatabase:
+          name: biblioteca-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: biblioteca-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: biblioteca-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: biblioteca-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: biblioteca-db
+          property: password
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false   # se completa en el panel de Render con la URL publica
+
+databases:
+  - name: biblioteca-db
+    plan: free
+    region: oregon
+    databaseName: sistema_biblioteca
+    user: biblioteca

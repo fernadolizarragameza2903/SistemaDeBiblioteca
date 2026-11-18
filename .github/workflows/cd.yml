@@ -1,0 +1,103 @@
+# =====================================================================
+# Entrega / Despliegue Continuo (CD)
+# Se dispara SOLO cuando el workflow CI termina con exito sobre main
+# (es decir, despues de mergear un Pull Request aprobado).
+# Etapas: 1) Publicar imagen en GHCR -> 2) Desplegar en Render -> 3) Verificar
+# =====================================================================
+name: CD
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------------
+  # Etapa 1: imagen versionada en GitHub Container Registry
+  # ---------------------------------------------------------------
+  publicar-imagen:
+    name: 1. Publicar imagen Docker (GHCR)
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      sha: ${{ steps.meta.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Datos de la version
+        id: meta
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Login en GHCR (token temporal del propio workflow)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construir y publicar imagen
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:latest
+            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.sha }}
+
+  # ---------------------------------------------------------------
+  # Etapas 2 y 3: despliegue en Render y verificacion post-despliegue
+  # ---------------------------------------------------------------
+  desplegar:
+    name: 2. Desplegar en Render
+    needs: publicar-imagen
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
+    steps:
+      - name: Disparar despliegue (Deploy Hook guardado como secreto)
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "::error::Falta el secreto RENDER_DEPLOY_HOOK_URL en el environment 'production'"
+            exit 1
+          fi
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL" -o /dev/null
+          echo "Despliegue solicitado para el commit ${{ needs.publicar-imagen.outputs.sha }}"
+
+      - name: 3. Verificar que el nuevo commit esta en produccion
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          SHA: ${{ needs.publicar-imagen.outputs.sha }}
+        run: |
+          # Render (plan gratuito) tarda varios minutos en construir; se espera hasta ~15 min
+          for i in $(seq 1 60); do
+            INFO=$(curl -fsS "$APP_URL/actuator/info" || true)
+            if echo "$INFO" | grep -q "$SHA"; then
+              curl -fsS "$APP_URL/actuator/health" | grep -q '"status":"UP"'
+              echo "## Despliegue OK" >> "$GITHUB_STEP_SUMMARY"
+              echo "- URL: $APP_URL" >> "$GITHUB_STEP_SUMMARY"
+              echo "- Commit: \`$SHA\`" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "Intento $i: aun no esta desplegado el commit $SHA"
+            sleep 15
+          done
+          echo "::error::El commit $SHA no aparecio en $APP_URL/actuator/info. Revisar logs en Render."
+          exit 1

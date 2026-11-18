@@ -231,3 +231,55 @@ curl -X POST http://localhost:8080/api/prestamos \
 ## Flujo de trabajo del equipo
 
 Ramas por funcionalidad, commits con Conventional Commits (`feat:`, `fix:`, `docs:`…), Pull Request con revisión de otro integrante y versiones con tags SemVer. Detalle completo en [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Contenedores (Docker)
+
+La aplicación se empaqueta con un `Dockerfile` multi-stage (JDK 21 para compilar, JRE 21 para ejecutar, usuario sin privilegios y `HEALTHCHECK` en `/actuator/health`). `docker-compose.yml` levanta la app y PostgreSQL 16; los scripts de `database/` se cargan solos en el primer arranque.
+
+```bash
+cp .env.example .env          # completar contraseñas (.env NO se sube al repo)
+docker compose up -d --build  # app en http://localhost:8080
+docker compose logs -f app
+docker compose down           # agregar -v para borrar los datos
+```
+
+| Elemento   | Valor                                                             |
+|------------|-------------------------------------------------------------------|
+| Puertos    | `8080` (app, o la variable `PORT`) y `5432` (PostgreSQL)          |
+| Volumen    | `biblioteca-data` → `/var/lib/postgresql/data`                    |
+| Variables  | `SPRING_PROFILES_ACTIVE`, `DB_URL` o `DB_HOST`/`DB_PORT`/`DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `CORS_ALLOWED_ORIGINS` |
+| Salud      | `GET /actuator/health` · versión y commit: `GET /actuator/info`   |
+
+## Integración y entrega continua (GitHub Actions)
+
+```text
+Issue → rama → commits → Pull Request → CI (secretos → build/pruebas → Docker + smoke test)
+      → review + merge a main → CD (imagen en GHCR → deploy en Render → verificación del commit)
+```
+
+| Workflow | Trigger | Qué hace |
+|----------|---------|----------|
+| [`ci.yml`](.github/workflows/ci.yml) | push a cualquier rama, PR a `main` | 1) Gitleaks busca secretos · 2) compila, prueba (H2) y empaqueta, publica reportes y JAR · 3) construye la imagen, la levanta con PostgreSQL y prueba `/actuator/health`, `/api/libros`, `/api/categorias` y `/`. Si algo falla, muestra los logs de los contenedores y bloquea el PR. |
+| [`cd.yml`](.github/workflows/cd.yml) | CI exitoso sobre `main` | 1) Publica la imagen en `ghcr.io` (tags `latest` y SHA) · 2) llama al Deploy Hook de Render (secreto) · 3) espera hasta que `/actuator/info` muestre el commit desplegado y la salud esté `UP`. Usa el environment `production`. |
+| [`release.yml`](.github/workflows/release.yml) | tag `vX.Y.Z` | Compila, prueba y crea el GitHub Release con el JAR adjunto. |
+
+## Despliegue en la nube (Render)
+
+`render.yaml` define la infraestructura (Blueprint): un web service Docker y una base PostgreSQL, ambos del plan gratuito. Las credenciales de la BD las genera Render y llegan como variables de entorno.
+
+1. Render → **New → Blueprint** → elegir este repositorio → **Apply**.
+2. Crear el esquema una sola vez con la *External Database URL* de Render:
+   ```bash
+   docker run --rm -v "$PWD/database:/db" postgres:16-alpine \
+     psql "<EXTERNAL_DATABASE_URL>" -f /db/01_schema.sql -f /db/02_data.sql
+   ```
+3. En el servicio: **Settings → Deploy Hook** → copiar la URL. En `CORS_ALLOWED_ORIGINS` poner la URL pública.
+4. En GitHub → **Settings → Environments → production**: secreto `RENDER_DEPLOY_HOOK_URL` y variable `APP_URL` (URL pública, sin `/` final).
+5. Cada merge a `main` con CI en verde se despliega automáticamente.
+
+## Seguridad y configuración
+
+- Ninguna credencial está en el código: `application-prod.properties` y `docker-compose.yml` solo leen variables de entorno; `.env` está en `.gitignore` y `.env.example` es la plantilla.
+- Los secretos del pipeline (`RENDER_DEPLOY_HOOK_URL`) viven en GitHub Secrets; el login a GHCR usa el `GITHUB_TOKEN` temporal del workflow.
+- El pipeline ejecuta **Gitleaks** en cada push para detectar secretos subidos por error.
+- El contenedor corre con un usuario sin privilegios y en producción no se muestran trazas de error ni detalles de salud.

@@ -1,0 +1,37 @@
+# =====================================================================
+# Release: al publicar un tag vX.Y.Z se compila, se prueba y se crea
+# el GitHub Release con el JAR adjunto y notas generadas automaticamente.
+#   git tag -a v0.4.0 -m "Version 0.4.0" && git push origin v0.4.0
+# =====================================================================
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publicar release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build y pruebas
+        run: ./mvnw -B -ntp verify
+
+      - name: Crear GitHub Release con el JAR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" target/SistemaDeBiblioteca-*.jar \
+            --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
