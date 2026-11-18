@@ -6,9 +6,11 @@
 # =====================================================================
 name: CI
 
+# push solo en main (despues del merge) y pull_request para las ramas de trabajo:
+# evita ejecuciones duplicadas que provocaban HTTP 429 en Maven Central.
 on:
   push:
-    branches: ["**"]
+    branches: [main]
     paths-ignore: ["**.md", "docs/**"]
   pull_request:
     branches: [main]
