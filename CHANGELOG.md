@@ -3,7 +3,24 @@
 Todos los cambios relevantes del proyecto se registran aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y [Versionado Semántico](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [0.4.0] - 2026-11-18
+
+APF3 – Automatización y Cloud: seguimiento de incidentes, CI/CD y entrega lista para despliegue.
+
+### Agregado
+- Pipeline de integración continua `ci.yml`: escaneo de secretos (Gitleaks) → build y pruebas → imagen Docker con smoke test contra PostgreSQL (#19).
+- `Dockerfile` multi-stage con usuario sin privilegios y HEALTHCHECK; `docker-compose.yml` con app + PostgreSQL; Actuator (`/actuator/health`, `/actuator/info`) (#20).
+- Pipeline de entrega continua `cd.yml`: imagen en GHCR, verificación de la imagen publicada y despliegue opcional a Render (#22, #29).
+- Blueprint `render.yaml` (web service Docker + PostgreSQL) y workflow `release.yml` que publica el JAR al crear un tag (#22).
+- Pruebas del servicio de libros (`LibroServiceTest`) (#16).
+- Protección de `main`: checks del CI obligatorios para mergear.
+
+### Corregido
+- Credenciales en texto plano en `docker-compose.yml`: ahora se leen de `.env` (ignorado) con `.env.example` como plantilla (#21).
+- `mvnw` sin permiso de ejecución rompía el build en Linux/CI (#25).
+- Versión del `pom.xml` desalineada con los tags publicados (#23).
+
+## [0.3.0] - 2026-10-21
 
 ### Agregado
 - Interfaz web con Thymeleaf y Bootstrap 5: layout común con fragmentos (head, navbar, alertas, footer).
